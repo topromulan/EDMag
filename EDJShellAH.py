@@ -15,18 +15,30 @@ else:
 print(ProgramName)
 
 import time
-time.sleep(2.5)
+time.sleep(1.5)
 
+global JournalFile
 JournalFile=open(CurJour, 'r')
 Quit=False
 
 N=0
+Events=[]
+IgnoredEvents=['Music']
+
+def Absorb(event):
+    eventType=event['event']
+    if not eventType in IgnoredEvents:
+        print(Events.index(event), eventType, event)
+
 while not Quit:
     jsonLine=JournalFile.readline() #why it don't block
-    time.sleep(0.1)
+    time.sleep(0.005)
     if not jsonLine:
+        memory=JournalFile.tell()
+        time.sleep(2)
+        JournalFile=open(CurJour, 'r')
+        JournalFile.seek(memory)
         continue
-    #time.sleep(1.5)
 
     try:
         event=json.loads(jsonLine)
@@ -35,7 +47,10 @@ while not Quit:
         time.sleep(2)
         raise Exception("oh shit")
 
-    print(event['event'])
+    #print(event['event'])
+    Events.append(event)
+    Absorb(event)
+
 
 
 
