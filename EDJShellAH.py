@@ -12,19 +12,26 @@ if isinstance(FakeInput, str):
 else:
     CurJour=max(glob.glob("/shared/Journal*"), key=os.path.getctime)
 
-print(ProgramName)
-time.sleep(1.5)
-print()
 
-IgnoredEvents=['Music']
+IgnoredEvents=['Music', 'Friends', 'ShipLocker']
 InterestingEvents=['Fileheader',
         'Cargo',
+        'LoadGame',
+        'Location',
+        'MaterialCollected',
+        'NpcCrewPaidWage',
         'ReceiveText',
         'ReservoirReplenished',
         'Shutdown',
+        'Statistics',
         ]
 
-def handle_Shutdown(event):
+########################################################################################################
+
+global ED_fn_prefix
+ED_fn_prefix="handle_ED_"
+
+def handle_ED_Shutdown(event):
     print("Game shut down")
     sys.exit(0)
 
@@ -35,9 +42,16 @@ Quit=False
 
 N=0
 Events=[]
+Handlers=[fnName for fnName in dir() if fnName.startswith(ED_fn_prefix)]
+
+print(ProgramName)
+print(Handlers)
+time.sleep(1.5)
+print()
+
 while not Quit:
-    jsonLine=JournalFile.readline() #why it don't block
-    time.sleep(0.005)
+    jsonLine=JournalFile.readline()
+    time.sleep(0.00025)
     if not jsonLine:
         memory=JournalFile.tell()
         time.sleep(2)
@@ -64,12 +78,12 @@ while not Quit:
     else:
         pass
 
-    handlerName = "handle_"+eventType
+    handlerName = ED_fn_prefix+eventType
     if handlerName in dir():
         print("Calling ", handlerName)
         exec("%s(event)" % (handlerName))
     else:
-        print("Not found %s in %s" % ( handlerName, dir()))
+        pass
 
 
 # :      0.) <Fileheader> {'timestamp': '2024-06-24T04:29:02Z', 'event': 'Fileheader', 'part': 1, 'language': 'English/UK', 'Odyssey': True, 'gameversion': '4.0.0.1806', 'build': 'r302447/r0 '}
