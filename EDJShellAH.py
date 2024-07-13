@@ -6,12 +6,11 @@ ProgramName="ED Journalist"
 FakeInput=False
 #FakeInput="/tmp/FAKER" #
 
-if isinstance(FakeInput, str):
+if FakeInput:
     ProgramName="ED Fake News Client: " + FakeInput
-    CurJour="/tmp/FAKER.log"
+    CurJour=FakeInput
 else:
     CurJour=max(glob.glob("/shared/Journal*"), key=os.path.getctime)
-
 
 IgnoredEvents=['Music', 'Friends', 'ShipLocker']
 InterestingEvents=['Fileheader',
@@ -46,8 +45,10 @@ Handlers=[fnName for fnName in dir() if fnName.startswith(ED_fn_prefix)]
 
 print(ProgramName)
 print(Handlers)
+print("Opening", CurJour)
 time.sleep(1.5)
 print()
+time.sleep(.5)
 
 while not Quit:
     jsonLine=JournalFile.readline()
@@ -69,17 +70,20 @@ while not Quit:
     Events.append(event)
     eventType=event['event']
     if eventType in InterestingEvents:
-        print('<'+eventType+'>', event)
         if len(str(event)) > 80:
-            print()
+            print("")
+        print('<'+eventType+'>', str(event)[:120])
+        # Log it to a file and shorten this preview
+
     elif not eventType in IgnoredEvents:
         print("|%7d.) " % Events.index(event), end='')
-        print(".. %8d bytes (%s)" % (len(str(event)), eventType))
+        print(".. %8d bytes (%s) \t.. %50s .." % (len(str(event)), eventType, str(event)[:50]))
     else:
         pass
 
     handlerName = ED_fn_prefix+eventType
     if handlerName in dir():
+    #if handlerName.isidentifier(): hmmm
         print("Calling ", handlerName)
         exec("%s(event)" % (handlerName))
     else:
