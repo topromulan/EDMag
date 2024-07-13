@@ -1,10 +1,11 @@
 #!/bin/env python3
 
 import sys, os, time, glob, json
+from pprint import pp
 
 ProgramName="ED Journalist"
 FakeInput=False
-#FakeInput="/tmp/FAKER" #
+FakeInput="/tmp/FAKER" #
 
 if FakeInput:
     ProgramName="ED Fake News Client: " + FakeInput
@@ -27,12 +28,35 @@ InterestingEvents=['Fileheader',
 
 ########################################################################################################
 
+def vt100(*codes):
+    for code in codes:
+        print("\x1b[%s" % code)
+
+
+def hanging_exam(event, thoughts="look at it. do something with it."):
+    vt100("2J", "H", "0;1M")
+    print( ("#"*18 + " %s " % event['event'].upper())*3, "EVENT: ", event['event'])
+    vt100("0M")
+    pp(event, width=4)
+    time.sleep(0.5); print("%s -- TODO: %s" % ('#'*45, thoughts))
+    time.sleep(0.5); print("#"*60,"\n")
+    time.sleep(6.5)
+
+
+########################################################################################################
+
 global ED_fn_prefix
 ED_fn_prefix="handle_ED_"
 
 def handle_ED_Shutdown(event):
     print("Game shut down")
     sys.exit(0)
+
+def handle_ED_Location(event):
+    hanging_exam(event, "put this in a .dat file to watch in a pinned window")
+
+def handle_ED_Liftoff(event):
+    hanging_exam(event)
 
 ########################################################################################################
 
@@ -52,7 +76,7 @@ time.sleep(.5)
 
 while not Quit:
     jsonLine=JournalFile.readline()
-    time.sleep(0.00025)
+    time.sleep(0.05 if FakeInput else 0.00125)
     if not jsonLine:
         memory=JournalFile.tell()
         time.sleep(2)
