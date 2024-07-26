@@ -5,7 +5,7 @@ from pprint import pp
 
 ProgramName="ED Journalist"
 FakeInput=False
-FakeInput="/tmp/FAKER" #
+#FakeInput="/tmp/FAKER" #
 
 if FakeInput:
     ProgramName="ED Fake News Client: " + FakeInput
@@ -22,9 +22,13 @@ InterestingEvents=['Fileheader',
         'NpcCrewPaidWage',
         'ReceiveText',
         'ReservoirReplenished',
+        'Scan',
         'Shutdown',
         'Statistics',
         ]
+
+InitialRead=True
+WasInteresting=False
 
 ########################################################################################################
 
@@ -34,13 +38,14 @@ def vt100(*codes):
 
 
 def hanging_exam(event, thoughts="look at it. do something with it."):
-    vt100("2J", "H", "0;1M")
+    #vt100("2J", "H", "0;1M")
     print( ("#"*18 + " %s " % event['event'].upper())*3, "EVENT: ", event['event'])
     vt100("0M")
     pp(event, width=4)
-    time.sleep(0.5); print("%s -- TODO: %s" % ('#'*45, thoughts))
+    if not InitialRead:
+        time.sleep(0.5); print("%s -- TODO: %s" % ('#'*45, thoughts))
+        time.sleep(3.5)
     time.sleep(0.5); print("#"*60,"\n")
-    time.sleep(6.5)
 
 
 ########################################################################################################
@@ -57,6 +62,18 @@ def handle_ED_Location(event):
 
 def handle_ED_Liftoff(event):
     hanging_exam(event)
+
+SAASignalsFound={}
+def handle_ED_SAASignalsFound(event):
+    global SAASignalsFound
+    SAASignalsFound[event['BodyName']] = [g['Genus_Localised'] for g in event['Genuses']]
+
+def handle_ED_Touchdown(event):
+    bodyName=event['Body']
+    if bodyName in SAASignalsFound:
+        vt100("0;1;35M")
+        print("SAA Signals Found: ", SAASignalsFound[bodyName])
+        vt100("0M")
 
 ########################################################################################################
 
@@ -82,6 +99,7 @@ while not Quit:
         time.sleep(2)
         JournalFile=open(CurJour, 'r')
         JournalFile.seek(memory)
+        InitialRead=False
         continue
 
     try:
@@ -93,17 +111,17 @@ while not Quit:
 
     Events.append(event)
     eventType=event['event']
-    if eventType in InterestingEvents:
+    if eventType in InterestingEvents and not WasInteresting:
         if len(str(event)) > 80:
             print("")
         print('<'+eventType+'>', str(event)[:120])
+        WasInteresting=True
         # Log it to a file and shorten this preview
-
     elif not eventType in IgnoredEvents:
         print("|%7d.) " % Events.index(event), end='')
         print(".. %8d bytes (%s) \t.. %50s .." % (len(str(event)), eventType, str(event)[:50]))
     else:
-        pass
+        WasInteresting=False
 
     handlerName = ED_fn_prefix+eventType
     if handlerName in dir():
