@@ -4,14 +4,34 @@ import sys, os, time, glob, json
 from pprint import pp
 
 ProgramName="ED Journalist"
+
 FakeInput=False
 #FakeInput="/tmp/FAKER" #
+
+JournalDirVBox="/shared"
+JournalDirWSL="/mnt/c/Users/limed/Saved Games/Frontier Developments/Elite Dangerous"
+JournalDirWin="c:\\Users\\limed\\Saved Games\\Frontier Developments\\Elite Dangerous"
+
+#JournalDir=JournalDirVBox; JournalReopenKluge=True
+JournalDir=JournalDirWSL; JournalReopenKluge=False
+#JournalDir=JournalDirWin; JournalReopenKluge=False
+
+JournalDir=JournalDir[:-1] if JournalDir[-1] in "\\/" else JournalDir
+
+# Check if this works for run in IDLE and check standard library way to do it
+#PathSeparator='\\'
+#PathSeparator='/'
+PathSeparator='/' if '/' in JournalDir else '\\'
+
+JournalDir=JournalDir.replace('/', PathSeparator).replace('\\', PathSeparator)
+print("Journal dir: ", JournalDir)
 
 if FakeInput:
     ProgramName="ED Fake News Client: " + FakeInput
     CurJour=FakeInput
 else:
-    CurJour=max(glob.glob("/shared/Journal*"), key=os.path.getctime)
+    JournalGlobString="%s%sJournal*" % (JournalDir, PathSeparator)
+    CurJour=max(glob.glob(JournalGlobString), key=os.path.getctime)
 
 IgnoredEvents=['Music', 'Friends', 'ShipLocker']
 InterestingEvents=['Fileheader',
@@ -94,7 +114,13 @@ time.sleep(.5)
 while not Quit:
     jsonLine=JournalFile.readline()
     time.sleep(0.05 if FakeInput else 0.00125)
-    if not jsonLine:
+
+    #In vbox the file stops yielding data once the original end is reached. However,
+    # I don't know how to detect that yet because JournalFile.closed still equaled True.
+    if not jsonLine and not JournalReopenKluge:
+        time.sleep(0.1)
+        continue
+    elif not jsonLine:
         memory=JournalFile.tell()
         time.sleep(2)
         JournalFile=open(CurJour, 'r')
