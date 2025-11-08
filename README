@@ -3,15 +3,7 @@ Elite Dangerous Journalist
 
 An ED helper for CMDRs
 
-At this time in Summer of 2024 the journal handler is primarily being used for monitoring live.
+At this time in November 2025 the journal reader was put in its own module and returns the next event from journal.read()
 
-Soon it should have other applications for reusing the functionality on older logs to generate different data for many uses.
-
-Including being a shell with readline support during (or in addition to) use while monitoring the live game.
-
-And it assumes you run in a Virtualbox with the journals mounted in /shared/
-
-
-
-
+I plan (very vaguely) to make this into a shell with readline support during (or in addition to) use while monitoring the live game. It should also be able to "journalize" tell a synopsis story of events from the journals.
 
