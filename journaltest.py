@@ -27,3 +27,4 @@ while True:
     if("Shutdown" in event['event']):
         break
 
+    print()
